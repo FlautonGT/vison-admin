@@ -22,7 +22,33 @@ import type {
   TopService,
 } from "@/types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === "production" ? "https://gateway.vison.id" : "http://localhost:8080")
+).replace(/\/+$/, "");
+
+const GO_NULLABLE_VALUE_KEYS = ["String", "Bool", "Int64", "Int32", "Int16", "Float64", "Time"] as const;
+
+function normalizeApiPayload<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeApiPayload(item)) as T;
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+
+    if (typeof record.Valid === "boolean") {
+      const nullableKey = GO_NULLABLE_VALUE_KEYS.find((key) => key in record);
+      if (nullableKey) {
+        return (record.Valid ? normalizeApiPayload(record[nullableKey]) : null) as T;
+      }
+    }
+
+    return Object.fromEntries(Object.entries(record).map(([key, item]) => [key, normalizeApiPayload(item)])) as T;
+  }
+
+  return value;
+}
 
 class AdminApiClient {
   private accessToken: string | null = null;
@@ -92,7 +118,7 @@ class AdminApiClient {
     const text = await response.text();
     if (!text) return null;
     try {
-      return JSON.parse(text) as ApiResponse<unknown>;
+      return normalizeApiPayload(JSON.parse(text) as ApiResponse<unknown>);
     } catch {
       return null;
     }
