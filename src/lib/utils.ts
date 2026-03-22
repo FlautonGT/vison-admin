@@ -76,9 +76,11 @@ export function getServiceLabel(serviceType?: string | null) {
 
 export function statusTone(status?: string | null) {
   const normalized = (status || "").toLowerCase();
-  if (["active", "approved", "resolved", "completed", "executed"].includes(normalized)) return "success";
-  if (["warning", "investigating", "pending", "in_review"].includes(normalized)) return "warning";
-  if (["critical", "suspended", "deleted", "deactivated", "rejected", "ignored", "failed"].includes(normalized)) {
+  if (["active", "approved", "resolved", "completed", "executed", "credit"].includes(normalized)) return "success";
+  if (["warning", "investigating", "pending", "in_review", "submitted", "needs_review"].includes(normalized)) {
+    return "warning";
+  }
+  if (["critical", "suspended", "deleted", "deactivated", "rejected", "ignored", "failed", "debit"].includes(normalized)) {
     return "danger";
   }
   if (normalized === "info") return "info";

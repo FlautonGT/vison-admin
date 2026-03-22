@@ -17,12 +17,11 @@ interface AuthContextValue {
 const AdminAuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 async function loadSessionData() {
-  const [adminResponse, profileResponse] = await Promise.all([adminApi.getAdminMe(), adminApi.getUserMe()]);
+  const adminResponse = await adminApi.getAdminMe();
   if (adminResponse.error) throw new Error(adminResponse.error.message);
-  if (profileResponse.error) throw new Error(profileResponse.error.message);
   return {
     admin: adminResponse.data ?? null,
-    profile: profileResponse.data ?? null,
+    profile: adminResponse.data?.profile ?? null,
   };
 }
 

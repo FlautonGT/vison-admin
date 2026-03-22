@@ -36,6 +36,7 @@ export interface AdminSession {
   isSuperAdmin: boolean;
   roles: string[];
   orgScopes: string[];
+  profile?: SessionProfile | null;
 }
 
 export interface LoginResponse {
@@ -74,6 +75,7 @@ export interface AdminUser {
   email: string;
   fullName: string;
   status: string;
+  kycStatus: string;
   emailVerified: boolean;
   kycVerified: boolean;
   twoFactorEnabled: boolean;
@@ -86,6 +88,7 @@ export interface AdminOrganization {
   name: string;
   type: string;
   status: string;
+  kybStatus: string;
   pricingTier: string;
   discountPercent: number;
   ownerName?: string | null;
@@ -94,6 +97,138 @@ export interface AdminOrganization {
   memberCount: number;
   apiKeyCount: number;
   requestsLast7Days: number;
+  createdAt: string;
+}
+
+export interface AdminUserMembership {
+  orgId: string;
+  orgName: string;
+  orgType: string;
+  orgStatus: string;
+  memberRole: string;
+  memberStatus: string;
+  joinedAt: string;
+}
+
+export interface AdminUserDetail {
+  user: {
+    id: string;
+    email: string;
+    fullName: string;
+    phone?: string | null;
+    status: string;
+    emailVerifiedAt?: string | null;
+    kycStatus: string;
+    kycVerifiedAt?: string | null;
+    kycData?: unknown;
+    kycReviewNotes?: string | null;
+    kycReviewedAt?: string | null;
+    kycReviewedBy?: string | null;
+    totpEnabledAt?: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+  organizations: AdminUserMembership[];
+}
+
+export interface AdminOrganizationMember {
+  id: string;
+  userId: string;
+  email?: string | null;
+  fullName?: string | null;
+  role: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface AdminOrganizationInvitation {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  expiresAt?: string | null;
+  createdAt: string;
+}
+
+export interface AdminOrganizationDetail {
+  organization: {
+    id: string;
+    name: string;
+    type: string;
+    status: string;
+    kybStatus: string;
+    pricingTier: string;
+    discountPercent: number;
+    businessName?: string | null;
+    description?: string | null;
+    businessCategory?: string | null;
+    businessSubCategory?: string | null;
+    website?: string | null;
+    npwp?: string | null;
+    nib?: string | null;
+    address?: unknown;
+    documents?: unknown;
+    kybReviewNotes?: string | null;
+    kybReviewedAt?: string | null;
+    kybReviewedBy?: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+  summary?: AdminOrganization;
+  balance?: { amount?: number; updatedAt?: string } | null;
+  apiKeys?: Array<Record<string, unknown>>;
+  members: AdminOrganizationMember[];
+  invitations: AdminOrganizationInvitation[];
+}
+
+export interface ServicePricingRow {
+  id: string;
+  serviceType: string;
+  displayName: string;
+  price: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BillingTransactionRow {
+  id: string;
+  orgId: string;
+  orgName: string;
+  type: string;
+  amount: number;
+  balanceAfter: number;
+  serviceType?: string | null;
+  description?: string | null;
+  createdAt: string;
+}
+
+export interface VerificationQueueRow {
+  id: string;
+  subjectType: "user" | "organization";
+  name: string;
+  email?: string | null;
+  status: string;
+  reviewNotes?: string | null;
+  reviewedAt?: string | null;
+  reviewedByEmail?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GlobalLogRow {
+  id: string;
+  orgId: string;
+  orgName: string;
+  apiKeyName?: string | null;
+  environment: string;
+  serviceType: string;
+  endpoint: string;
+  method: string;
+  statusCode: number;
+  cost: number;
+  processingTimeMs?: number | null;
+  ipAddress?: string | null;
   createdAt: string;
 }
 

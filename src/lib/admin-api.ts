@@ -1,25 +1,31 @@
 import type {
   ActionApprovalRow,
   AdminOrganization,
+  AdminOrganizationDetail,
   AdminRoleRow,
   AdminSession,
   AdminUser,
+  AdminUserDetail,
   ApiError,
   ApiResponse,
   AssignmentRow,
   AuditLogRow,
   Announcement,
+  BillingTransactionRow,
   ComplianceRequest,
   DashboardTile,
   FraudAlert,
   FraudSuggestion,
+  GlobalLogRow,
   LoginResponse,
   Overview,
   RateLimitMonitorItem,
   RateLimitOverrideRow,
   SavedView,
   SessionProfile,
+  ServicePricingRow,
   TopService,
+  VerificationQueueRow,
 } from "@/types";
 
 const API_URL = (
@@ -240,24 +246,47 @@ class AdminApiClient {
     return this.request<{ overview: Overview; topServices: TopService[] }>("/v1/admin/overview");
   }
 
-  async getUsers(params?: { query?: string; status?: string; page?: number; perPage?: number }) {
+  async getUsers(params?: { query?: string; status?: string; kycStatus?: string; page?: number; perPage?: number }) {
     const search = new URLSearchParams();
     if (params?.query) search.set("query", params.query);
     if (params?.status) search.set("status", params.status);
+    if (params?.kycStatus) search.set("kycStatus", params.kycStatus);
     if (params?.page) search.set("page", `${params.page}`);
     if (params?.perPage) search.set("perPage", `${params.perPage}`);
     const suffix = search.toString() ? `?${search.toString()}` : "";
     return this.request<AdminUser[]>(`/v1/admin/users${suffix}`);
   }
 
-  async getOrganizations(params?: { query?: string; status?: string; page?: number; perPage?: number }) {
+  async getUserDetail(id: string) {
+    return this.request<AdminUserDetail>(`/v1/admin/users/${id}`);
+  }
+
+  async getOrganizations(params?: {
+    query?: string;
+    status?: string;
+    kybStatus?: string;
+    page?: number;
+    perPage?: number;
+  }) {
     const search = new URLSearchParams();
     if (params?.query) search.set("query", params.query);
     if (params?.status) search.set("status", params.status);
+    if (params?.kybStatus) search.set("kybStatus", params.kybStatus);
     if (params?.page) search.set("page", `${params.page}`);
     if (params?.perPage) search.set("perPage", `${params.perPage}`);
     const suffix = search.toString() ? `?${search.toString()}` : "";
     return this.request<AdminOrganization[]>(`/v1/admin/organizations${suffix}`);
+  }
+
+  async getOrganizationDetail(id: string) {
+    return this.request<AdminOrganizationDetail>(`/v1/admin/organizations/${id}`);
+  }
+
+  async updateUserStatus(id: string, status: string, reason: string) {
+    return this.request(`/v1/admin/users/${id}/status`, {
+      method: "PUT",
+      body: JSON.stringify({ status, reason }),
+    });
   }
 
   async banUser(id: string, reason: string) {
@@ -271,6 +300,27 @@ class AdminApiClient {
     return this.request(`/v1/admin/users/${id}/unban`, {
       method: "POST",
       body: JSON.stringify({ reason }),
+    });
+  }
+
+  async forceVerifyUserEmail(id: string, reason: string) {
+    return this.request(`/v1/admin/users/${id}/verify-email`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async resetUser2FA(id: string, reason: string) {
+    return this.request(`/v1/admin/users/${id}/reset-2fa`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async reviewUserKYC(id: string, payload: { status: string; reviewNotes?: string; reason: string }) {
+    return this.request(`/v1/admin/users/${id}/kyc-review`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
     });
   }
 
@@ -293,6 +343,52 @@ class AdminApiClient {
       method: "DELETE",
       body: JSON.stringify({ reason, confirmName }),
     });
+  }
+
+  async updateOrganizationCommercial(id: string, payload: { pricingTier: string; discountPercent: number; reason: string }) {
+    return this.request(`/v1/admin/organizations/${id}/commercial`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async reviewOrganizationKYB(id: string, payload: { status: string; reviewNotes?: string; reason: string }) {
+    return this.request(`/v1/admin/organizations/${id}/kyb-review`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async getPricing() {
+    return this.request<{ pricing: ServicePricingRow[] }>("/v1/admin/pricing");
+  }
+
+  async updatePricing(id: string, payload: { displayName: string; price: number; isActive: boolean }) {
+    return this.request(`/v1/admin/pricing/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async getBillingTransactions(limit = 120) {
+    return this.request<{ transactions: BillingTransactionRow[] }>(`/v1/admin/billing/transactions?limit=${limit}`);
+  }
+
+  async adjustBalance(payload: { orgId: string; type: "credit" | "debit"; amount: number; description: string; reason: string }) {
+    return this.request<{ message: string; newBalance: number }>(`/v1/admin/billing/adjustments`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async getKYCReviews(status?: string) {
+    const suffix = status ? `?status=${encodeURIComponent(status)}` : "";
+    return this.request<{ items: VerificationQueueRow[] }>(`/v1/admin/verifications/kyc${suffix}`);
+  }
+
+  async getKYBReviews(status?: string) {
+    const suffix = status ? `?status=${encodeURIComponent(status)}` : "";
+    return this.request<{ items: VerificationQueueRow[] }>(`/v1/admin/verifications/kyb${suffix}`);
   }
 
   async getAnnouncements() {
@@ -364,6 +460,27 @@ class AdminApiClient {
     if (params?.perPage) search.set("perPage", `${params.perPage}`);
     const suffix = search.toString() ? `?${search.toString()}` : "";
     return this.request<AuditLogRow[]>(`/v1/admin/audit-logs${suffix}`);
+  }
+
+  async getGlobalLogs(params?: {
+    page?: number;
+    perPage?: number;
+    orgId?: string;
+    environment?: string;
+    service?: string;
+    status?: string;
+    requestId?: string;
+  }) {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", `${params.page}`);
+    if (params?.perPage) search.set("perPage", `${params.perPage}`);
+    if (params?.orgId) search.set("orgId", params.orgId);
+    if (params?.environment) search.set("environment", params.environment);
+    if (params?.service) search.set("service", params.service);
+    if (params?.status) search.set("status", params.status);
+    if (params?.requestId) search.set("requestId", params.requestId);
+    const suffix = search.toString() ? `?${search.toString()}` : "";
+    return this.request<GlobalLogRow[]>(`/v1/admin/logs${suffix}`);
   }
 
   async getSavedViews() {

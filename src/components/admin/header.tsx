@@ -10,10 +10,14 @@ const routeLabels: Record<string, string> = {
   "/overview": "Overview",
   "/users": "Users",
   "/organizations": "Organizations",
+  "/verifications": "Verifications",
+  "/billing": "Billing",
+  "/services": "Services",
   "/announcements": "Announcements",
   "/rate-limits": "Rate Limits",
   "/compliance": "Compliance",
   "/fraud": "Fraud Detection",
+  "/logs": "Logs",
   "/settings": "Settings",
 };
 

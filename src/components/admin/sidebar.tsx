@@ -4,10 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BellRing,
+  BriefcaseBusiness,
+  Boxes,
   FileClock,
   Gauge,
   LayoutDashboard,
+  ListTree,
   MenuSquare,
+  ScrollText,
   ShieldAlert,
   SlidersHorizontal,
   Users,
@@ -20,10 +24,14 @@ const navItems = [
   { href: "/overview", label: "Overview", icon: LayoutDashboard },
   { href: "/users", label: "Users", icon: Users },
   { href: "/organizations", label: "Organizations", icon: MenuSquare },
+  { href: "/verifications", label: "Verifications", icon: BriefcaseBusiness },
+  { href: "/billing", label: "Billing", icon: Boxes },
+  { href: "/services", label: "Services", icon: ListTree },
   { href: "/announcements", label: "Announcements", icon: BellRing },
   { href: "/rate-limits", label: "Rate Limits", icon: Gauge },
   { href: "/compliance", label: "Compliance", icon: FileClock },
   { href: "/fraud", label: "Fraud", icon: ShieldAlert },
+  { href: "/logs", label: "Logs", icon: ScrollText },
   { href: "/settings", label: "Settings", icon: SlidersHorizontal },
 ];
 
